@@ -1,0 +1,45 @@
+```
+错误结果
+```
+
+首先我们先分析一下导致显示错误的原因：由于int触发的硬件中断不是一个call而是一个类似于jump的行为，所以all_traps并非一次函数调用。我们看到的entry.S中的ebp并非 all_traps 的，而是 system_call 的。
+
+我们现在的手段就是，修改print_stackframe函数，使其能正确输出栈帧信息。我们考虑到内核态拥有访问用户态的权限，所以我们在trap这个函数里面调用panic，
+```
+贴trap调用panic代码
+```
+再在panic中调用 print_stackframe
+```
+贴panic调用print的代码
+```
+最后我们修改 print_stackframe 函数达到目的。
+```
+贴print代码
+```
+我们的print较于原来的print，多了以下几个步骤：
+1.记录old_ebp
+2.判断是不是 all_traps 并做特殊处理
+3.还原 sys_call 函数的栈帧
+
+
+先看我们的新结果
+
+```
+成果图
+```
+
+接下来我们详细解释这三步的工作。
+1.记录old_ebp
+
+我们在 all_traps 中的工作需要old_ebp
+
+2.判断是不是 all_traps 并做特殊处理
+
+我们针对ebp小于 0xc0000000 而eip大于 0xc0000000 的情况做特殊处理，它是 all_traps 函数，我们会计算出 all_traps 的栈帧首地址，并按照格式输出信息。并输出额外信息，表示内核栈结束。
+
+3.还原 sys_call 函数的栈帧
+
+sys_call 在错误显示中没有，它的ebp我们是知道的，我们只需要构造出其eip，根据栈的结构，我们推测出它的位置在esp上17个位置。这样我们就还原了它的栈帧。
+
+
+
