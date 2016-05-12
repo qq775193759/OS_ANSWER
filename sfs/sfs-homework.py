@@ -245,17 +245,32 @@ class fs:
 
         inum = self.nameToInum[tfile]
 
-    # YOUR CODE, YOUR ID
+    # 2013011404
         # IF inode.refcnt ==1, THEN free data blocks first, then free inode, ELSE dec indoe.refcnt
         # remove from parent directory: delete from parent inum, delete from parent addr
     # DONE
 
         # finally, remove from files list
+
+        relatedInode = self.inodes[inum]
+        if relatedInode.getRefCnt() == 1:
+            self.dataFree(relatedInode.getAddr())
+            self.inodeFree(inum)
+            self.nameToInum.pop(tfile)
+        else:
+            relatedInode.decRefCnt()
+        parentName = self.getParent(tfile)
+        fileName = tfile[len(tfile) - 1]
+        parentInode = self.inodes[self.nameToInum[parentName]]
+        parentInode.decRefCnt()
+        parentBlock = self.data[parentInode.getAddr()]
+        parentBlock.delDirEntry(fileName)
+
         self.files.remove(tfile)
         return 0
 
     def createLink(self, target, newfile, parent):
-    # YOUR CODE, YOUR ID
+    # 2013011404
         # find info about parent
         # is there room in the parent directory?
         # if the newfile was already in parent dir?
@@ -272,7 +287,7 @@ class fs:
         return t_inum
 
     def createFile(self, parent, newfile, ftype):
-    # YOUR CODE, YOUR ID
+    # 2013011404
         # find info about parent
         # is there room in the parent directory?
         # have to make sure file name is unique
@@ -305,7 +320,7 @@ class fs:
         curSize = self.inodes[inum].getSize()
         dprint('writeFile: inum:%d cursize:%d refcnt:%d' % (inum, curSize, self.inodes[inum].getRefCnt()))
 
-    # YOUR CODE, YOUR ID
+    # 2013011404
         # file is full?
         # no data blocks left
         # write file data
