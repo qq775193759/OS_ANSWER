@@ -263,7 +263,13 @@ class fs:
         # inc parent ref count
         # now add to directory
     # DONE
-        return tinum
+        f_inum = self.nameToInum[parent]
+        t_inum = self.nameToInum[target]
+        self.data[f_inum].addDirEntry(newfile, t_inum)
+        self.inodes[f_inum].incRefCnt()
+        self.inodes[t_inum].incRefCnt()
+
+        return t_inum
 
     def createFile(self, parent, newfile, ftype):
     # YOUR CODE, YOUR ID
@@ -277,8 +283,6 @@ class fs:
         # and add to directory of parent
     # DONE
     
-        #p_inum = self.nameToInum[parent]
-        #self.inodes[p_inum]
         f_inum = self.nameToInum[parent]
         inum = self.inodeAlloc()
         if ftype == 'd':
@@ -306,6 +310,11 @@ class fs:
         # no data blocks left
         # write file data
     # DONE
+        qw_dataAddr = self.dataAlloc()
+        if qw_dataAddr != -1:
+            self.inodes[inum].setAddr(qw_dataAddr)
+            self.data[qw_dataAddr].setType('f')
+            self.data[qw_dataAddr].addData(data)
 
         if printOps:
             print 'fd=open("%s", O_WRONLY|O_APPEND); write(fd, buf, BLOCKSIZE); close(fd);' % tfile
