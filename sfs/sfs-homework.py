@@ -279,8 +279,21 @@ class fs:
     
         #p_inum = self.nameToInum[parent]
         #self.inodes[p_inum]
-        inum = self.ibitmap.alloc()
-        self.inodes[inum] = inode('d',inum)
+        f_inum = self.nameToInum[parent]
+        inum = self.inodeAlloc()
+        if ftype == 'd':
+            iaddr = self.dataAlloc()
+            self.data[iaddr].setType(ftype)
+            self.data[iaddr].addDirEntry(".", inum)
+            self.data[iaddr].addDirEntry("..", f_inum)
+            self.inodes[inum].setAll(ftype, iaddr, 2)
+        else:
+            iaddr = -1
+            self.inodes[inum].setAll(ftype, iaddr, 1)
+        self.nameToInum[newfile] = inum
+        self.data[f_inum].addDirEntry(newfile, inum)
+        self.inodes[f_inum].incRefCnt()
+
         return inum
 
     def writeFile(self, tfile, data):
