@@ -15,9 +15,20 @@ kern_init-->fs_init-->dev_init-->init_device
 ## 读文件的执行过程
 
 ```
-file_open
+file_open-->fd_array_alloc
+         -->vfs_open-->vfs_lookup
+                    -->vop_open
+                    -->vop_open_inc
+         -->fd_array_open-->fopen_count_inc
 ```
 
 ```
-file_read
+file_read-->fd2file
+         -->fd_array_acquire-->fopen_count_inc
+         -->vop_read
+         -->fd_array_release
+```
+
+```
+file_close-->fd2file
 ```
